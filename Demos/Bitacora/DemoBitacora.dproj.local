@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <Transactions>
+    <Transaction>2020/05/31 10:27:21.244,=C:\Users\Bismarck\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/05/31 10:27:58.712,C:\Proyectos\github\delphi\Demos\Bitacora\UfrmDemoBitacora.dfm=C:\Users\Bismarck\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2020/05/31 10:27:58.712,C:\Proyectos\github\delphi\Demos\Bitacora\UfrmDemoBitacora.pas=C:\Users\Bismarck\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/05/31 10:28:05.002,C:\Proyectos\github\delphi\Demos\Bitacora\DemoBitacora.dproj=C:\Users\Bismarck\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2020/05/31 10:29:02.977,=C:\Proyectos\github\delphi\Librerias\UBitacora.pas</Transaction>
+    <Transaction>2020/05/31 10:30:30.450,=C:\Proyectos\github\delphi\Librerias\UUtilerias.pas</Transaction>
+  </Transactions>
+</BorlandProject>

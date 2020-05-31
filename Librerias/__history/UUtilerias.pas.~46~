@@ -1,0 +1,531 @@
+unit UUtilerias;
+
+interface
+
+uses
+  System.SysUtils, Winapi.Windows, System.Classes, WinSvc, WinSock, System.Win.ComObj;
+
+const
+
+  ESTADO_SERVICIO_DETENIDO   = 'Detenido';
+  ESTADO_SERVICIO_DETENIENDO = 'Deteniendo';
+  ESTADO_SERVICIO_EN_EJECUCION = 'En ejecución';
+  ESTADO_SERVICIO_INICIANDO = 'Iniciando';
+  ESTADO_SERVICIO_NO_DISPONIBLE = 'No disponible';
+  ESTADO_SERVICIO_PAUSADO = 'Pausado';
+
+type
+  /// <summary> Clase con métodos genéricos </summary>
+  /// <remarks> Bismarck Sierra Ibarra 2019-01-10</remarks>
+  TUtilerias = class
+  private
+  public
+    /// <summary> Centra un texto en una cadena de cierta longitud</summary>
+    /// <param name="ACadena"> Cadena a centrar </param>
+    /// <param name="AAncho"> Ancho de la cadena final </param>
+    /// <returns> Cadena centrada </returns>
+    class function AlinearCadenaCentrar(ACadena : string; AAncho : integer) : string;
+
+    /// <summary> Elimina archivos o directorios </summary>
+    /// <param name="AArchivos"> Archivo, directorio o filtro de archivos a eliminar </param>
+    /// <param name="ARecursivo"> Indica si se eliminará de forma recursiva en caso de ser directorio </param>
+    /// <returns> Verdadero si se eliminó exitosamente, falso de forma contraria </returns>
+    class function EliminarArchivos(AArchivos : string; ARecursivo : boolean = false) : boolean;
+
+    /// <summary> Obtiene el nombre de un archivo sin su extensión </summary>
+    /// <param name="AArchivo"> Archivo al que se desea quitar la extensión </param>
+    /// <returns> Nombre de la aplicación sin extensión y sin ruta </returns>
+    class function ObtenerArchivoNombreSinExt(AArchivo : string) : string;
+
+    /// <summary> Obtiene el nombre de la aplicación </summary>
+    /// <returns> Nombre de la aplicación sin ruta </returns>
+    class function ObtenerAplicacionNombre : string;
+
+    /// <summary> Obtiene el nombre y ruta de la aplicación </summary>
+    /// <returns> Nombre de la aplicación con su ruta</returns>
+    class function ObtenerAplicacionNombreRuta : string;
+
+    /// <summary> Obtiene la ruta donde se encuentra la aplicación </summary>
+    /// <returns> Ruta de la aplicación con diagonal invertida al final </returns>
+    class function ObtenerAplicacionRuta : string;
+
+    /// <summary> Obtiene la versión de la aplicación </summary>
+    /// <returns> Versión de la aplicación </returns>
+    class function ObtenerAplicacionVersion : string;
+
+    /// <summary> Obtiene el serial del disco duro </summary>
+    /// <returns> Número de serie de la unidad c:\ </returns>
+    class function DiscoDuroObtenerSerial : string;
+
+    /// <summary> Obtiene el nombre de la computadora </summary>
+    /// <returns> Nombre del equipoo </returns>
+    class function NombrePCObtener : string;
+
+    /// <summary> Valida si un correo electrónico es correcto </summary>
+    /// <param name="ACorreo"> Correo electrónico a validar </param>
+    /// <returns> Verdadero si es correcto, falso en caso contrario </returns>
+    class function CorreoValidar(ACorreo : string) : boolean;
+
+    /// <summary> Abre un puerto en el cortafuegos de Windows</summary>
+    /// <param name="ANombreEntrada"> Nombre de la regla de entrada del cortafuegos</param>
+    /// <param name="ANumeroPuerto"> Puerto que se desea abrir </param>
+    /// <param name="AProtocoloTCP"> Indica si es portocolo TCP </param>
+    /// <param name="AAmbitoLocal"> Indica si la regla es local o pública </param>
+    /// <param name="AActivar"> Es pecifica si se desea activar la regla</param>
+    class procedure CortaFuegosAbrirPuerto(ANombreEntrada : string; ANumeroPuerto : integer; AProtocoloTCP : boolean;
+      AAmbitoLocal : boolean; AActivar : boolean);
+
+    /// <summary> Ejecuta un comando de MSDOS y envía los resultados de consola a un componente tipo Memo</summary>
+    /// <param name="AComando"> Comando que se desea ejecutar </param>
+    /// <param name="AParametros"> Parametros que se le enviarán al comando </param>
+    /// <param name="AMemo"> Componente Memo que desplegará la salida del comando </param>
+    // class procedure EjecutarMSDOS(const AComando, AParametros : string; AMemo : TMemo);
+
+    /// <summary> Obtiene el estado de un servicio de Windows </summary>
+    /// <param name="ANombreServicio"> Nombre del servicio a verificar </param>
+    /// <returns> Estado del servicio:  </returns>
+    class function ServicioObtenerEstado(ANombreServicio : string) : string;
+
+    /// <summary> Detiene un servicio de Windows </summary>
+    /// <param name="ANombreServicio"> Nombre del servicio a detener </param>
+    /// <returns> Verdadero si se logró detener el servicio  </returns>
+    class function ServicioDetener(ANombreServicio : string) : boolean;
+
+    /// <summary> Inicia un servicio de Windows </summary>
+    /// <param name="ANombreServicio"> Nombre del servicio a iniciar </param>
+    /// <returns> Verdadero si se logró iniciar el servicio  </returns>
+    class function ServicioIniciar(ANombreServicio : string) : boolean;
+  end;
+
+implementation
+
+{ TUtilerias }
+
+class function TUtilerias.AlinearCadenaCentrar(ACadena : string; AAncho : integer) : string;
+var
+  LEspacios : integer;
+begin
+  Result := ACadena.Trim;
+  LEspacios := (AAncho - Length(Result)) div 2;
+  Result := StringOfChar(' ', LEspacios) + Result + StringOfChar(' ', LEspacios);
+end;
+
+class function TUtilerias.ObtenerAplicacionNombre : string;
+begin
+  Result := ExtractFileName(ObtenerAplicacionNombreRuta);
+  Result := Copy(Result, 1, Length(Result) - Length(ExtractFileExt(Result)));
+end;
+
+class function TUtilerias.ObtenerAplicacionNombreRuta : string;
+var
+  LNombre : array [0 .. MAX_PATH] of char;
+begin
+  FillChar(LNombre, sizeof(LNombre), #0);
+  GetModuleFileName(hInstance, LNombre, sizeof(LNombre));
+  Result := LNombre;
+end;
+
+class function TUtilerias.ObtenerAplicacionRuta : string;
+begin
+  Result := ExtractFilePath(ObtenerAplicacionNombreRuta);
+end;
+
+class function TUtilerias.ObtenerAplicacionVersion : string;
+var
+  LNombre          : array [0 .. MAX_PATH] of char;
+  LInformacion     : PChar;
+  LTamanio         : DWORD;
+  LTamanioBuffer   : DWORD;
+  LConsultaVersion : string;
+  LValor           : Pointer;
+begin
+  LValor := nil;
+  FillChar(LNombre, sizeof(LNombre), #0);
+  GetModuleFileName(hInstance, LNombre, sizeof(LNombre));
+
+  LTamanioBuffer := GetFileVersionInfoSize(LNombre, LTamanioBuffer);
+  if LTamanioBuffer > 0 then
+  begin
+    LInformacion := AllocMem(LTamanioBuffer);
+    try
+      GetFileVersionInfo(LNombre, 0, LTamanioBuffer, LInformacion);
+
+      VerQueryValue(LInformacion, '\VarFileInfo\Translation', LValor, LTamanio);
+      if LTamanio > 0 then
+      begin
+        LConsultaVersion := Format('\StringFileInfo\%.4x%.4x\%s', [LoWord(integer(LValor^)), HiWord(integer(LValor^)),
+          'FileVersion']);
+
+        if VerQueryValue(LInformacion, PChar(LConsultaVersion), LValor, LTamanio) then
+          Result := StrPas(PChar(LValor));
+      end;
+    finally
+      FreeMem(LInformacion, LTamanioBuffer);
+    end;
+  end;
+end;
+
+class function TUtilerias.ObtenerArchivoNombreSinExt(AArchivo : string) : string;
+begin
+  Result := ExtractFileName(AArchivo);
+  Result := Copy(Result, 1, Length(Result) - Length(ExtractFileExt(Result)));
+end;
+
+class function TUtilerias.DiscoDuroObtenerSerial : string;
+var
+  a, b      : DWORD;
+  Buffer    : array [0 .. MAX_PATH] of char;
+  SerialNum : DWORD;
+begin
+  Result := 'NULL';
+  if GetVolumeInformation(PChar(ExtractFileDrive(ParamStr(0))), Buffer, sizeof(Buffer), @SerialNum, a, b, nil, 0) then
+    Result := Format('%8.8X', [SerialNum]);
+end;
+
+class function TUtilerias.CorreoValidar(ACorreo : string) : boolean;
+const
+  // Caracteres válidos en un "átomo"
+  ATOM_CHARS = [#33 .. #255] - ['(', ')', '<', '>', '@', ',', ';', ':', '\', '/', '"', '.', '[', ']', #127];
+  // Caracteres válidos en una "cadena-entrecomillada"
+  QUOTED_STRING_CHARS = [#0 .. #255] - ['"', #13, '\'];
+  // Caracteres válidos en un subdominio
+  LETTERS         = ['A' .. 'Z', 'a' .. 'z'];
+  LETTERS_DIGITS  = ['0' .. '9', 'A' .. 'Z', 'a' .. 'z'];
+  SUBDOMAIN_CHARS = ['-', '0' .. '9', 'A' .. 'Z', 'a' .. 'z'];
+
+type
+  States = (STATE_BEGIN, STATE_ATOM, STATE_QTEXT, STATE_QCHAR, STATE_QUOTE, STATE_LOCAL_PERIOD,
+    STATE_EXPECTING_SUBDOMAIN, STATE_SUBDOMAIN, STATE_HYPHEN);
+var
+  State             : States;
+  i, n, iSubdomains : integer;
+  c                 : char;
+begin
+  State := STATE_BEGIN;
+  n := Length(ACorreo);
+  i := 1;
+  iSubdomains := 1;
+  while (i <= n) do
+  begin
+    c := ACorreo[i];
+    case State of
+      STATE_BEGIN :
+        if CharInSet(c, ATOM_CHARS) then
+          State := STATE_ATOM
+        else if c = '"' then
+          State := STATE_QTEXT
+        else
+          break;
+      STATE_ATOM :
+        if c = '@' then
+          State := STATE_EXPECTING_SUBDOMAIN
+        else if c = '.' then
+          State := STATE_LOCAL_PERIOD
+        else if not CharInSet(c, ATOM_CHARS) then
+          break;
+      STATE_QTEXT :
+        if c = '\' then
+          State := STATE_QCHAR
+        else if c = '"' then
+          State := STATE_QUOTE
+        else if not CharInSet(c, QUOTED_STRING_CHARS) then
+          break;
+      STATE_QCHAR :
+        State := STATE_QTEXT;
+      STATE_QUOTE :
+        if c = '@' then
+          State := STATE_EXPECTING_SUBDOMAIN
+        else if c = '.' then
+          State := STATE_LOCAL_PERIOD
+        else
+          break;
+      STATE_LOCAL_PERIOD :
+        if CharInSet(c, ATOM_CHARS) then
+          State := STATE_ATOM
+        else if c = '"' then
+          State := STATE_QTEXT
+        else
+          break;
+      STATE_EXPECTING_SUBDOMAIN :
+        if CharInSet(c, LETTERS_DIGITS) then
+          State := STATE_SUBDOMAIN
+        else
+          break;
+      STATE_SUBDOMAIN :
+        if c = '.' then
+        begin
+          Inc(iSubdomains);
+          State := STATE_EXPECTING_SUBDOMAIN
+        end
+        else if c = '-' then
+          State := STATE_HYPHEN
+        else if not CharInSet(c, LETTERS_DIGITS) then
+          break;
+      STATE_HYPHEN :
+        if CharInSet(c, LETTERS_DIGITS) then
+          State := STATE_SUBDOMAIN
+        else if c <> '-' then
+          break;
+    end;
+    Inc(i);
+  end;
+  if i <= n then
+    Result := false
+  else
+    Result := (State = STATE_SUBDOMAIN) and (iSubdomains >= 2);
+
+  // si sCorreo esta vacio regresa true
+  if ACorreo = '' then
+    Result := true;
+end;
+
+class function TUtilerias.EliminarArchivos(AArchivos : string; ARecursivo : boolean = false) : boolean;
+var
+  srcBusqueda : TSearchRec;
+begin
+  Result := true;
+  if System.SysUtils.FindFirst(AArchivos, faAnyFile, srcBusqueda) <> 0 then
+    exit;
+
+  repeat
+    if (srcBusqueda.Attr and faDirectory <> 0) then
+    begin
+      if (srcBusqueda.Name <> '.') and (srcBusqueda.Name <> '..') then
+        if (ARecursivo) then
+        begin
+          EliminarArchivos(ExtractFilePath(AArchivos) + srcBusqueda.Name + '\' + ExtractFileName(AArchivos),
+            ARecursivo);
+          System.SysUtils.RemoveDir(ExtractFilePath(AArchivos) + srcBusqueda.Name);
+        end;
+    end
+    else
+      try
+        System.SysUtils.DeleteFile(ExtractFilePath(AArchivos) + srcBusqueda.Name);
+      except
+        Result := false;
+      end;
+  until System.SysUtils.FindNext(srcBusqueda) <> 0;
+  System.SysUtils.FindClose(srcBusqueda);
+end;
+
+
+// Permite ejecutar una aplicación en DOS y captura la salida en un Memo
+// procedure TUtilerias.EjecutarMSDOS(const AComando, AParametros : string; AMemo : TMemo);
+// const
+// CReadBuffer = 2400;
+// var
+// saSecurity : TSecurityAttributes;
+// hRead      : THandle;
+// hWrite     : THandle;
+// suiStartup : TStartupInfo;
+// piProcess  : TProcessInformation;
+// pBuffer    : array [0 .. CReadBuffer] of AnsiChar;
+// dBuffer    : array [0 .. CReadBuffer] of AnsiChar;
+// dRead      : DWORD;
+// dRunning   : DWORD;
+// dAvailable : DWORD;
+// begin
+// saSecurity.nLength := sizeof(TSecurityAttributes);
+// saSecurity.bInheritHandle := true;
+// saSecurity.lpSecurityDescriptor := nil;
+// if CreatePipe(hRead, hWrite, @saSecurity, 0) then
+// try
+// FillChar(suiStartup, sizeof(TStartupInfo), #0);
+// suiStartup.cb := sizeof(TStartupInfo);
+// suiStartup.hStdInput := hRead;
+// suiStartup.hStdOutput := hWrite;
+// suiStartup.hStdError := hWrite;
+// suiStartup.dwFlags := STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW;
+// suiStartup.wShowWindow := SW_HIDE;
+// if CreateProcess(nil, PChar(AComando + ' ' + AParametros), @saSecurity, @saSecurity, true, NORMAL_PRIORITY_CLASS,
+// nil, nil, suiStartup, piProcess) then
+// try
+// repeat
+// dRunning := WaitForSingleObject(piProcess.hProcess, 100);
+// PeekNamedPipe(hRead, nil, 0, nil, @dAvailable, nil);
+// if (dAvailable > 0) then
+// repeat
+// dRead := 0;
+// ReadFile(hRead, pBuffer[0], CReadBuffer, dRead, nil);
+// pBuffer[dRead] := #0;
+// OemToCharA(pBuffer, dBuffer);
+// AMemo.Lines.Add(string(pBuffer));
+// AMemo.GoToTextEnd;
+// until (dRead < CReadBuffer);
+// Application.ProcessMessages;
+// until (dRunning <> WAIT_TIMEOUT);
+// finally
+// CloseHandle(piProcess.hProcess);
+// CloseHandle(piProcess.hThread);
+// end;
+// finally
+// CloseHandle(hRead);
+// CloseHandle(hWrite);
+// end;
+// end;
+
+class function TUtilerias.ServicioObtenerEstado(ANombreServicio : string) : string;
+var
+  schm, schs : SC_Handle;
+  ss         : TServiceStatus;
+  dwStat     : DWORD;
+  LEquipo    : string;
+begin
+  dwStat := 0;
+  LEquipo := NombrePCObtener;
+
+  schm := OpenSCManager(PWideChar(LEquipo), nil, SC_MANAGER_CONNECT);
+  if (schm > 0) then
+  begin
+    schs := OpenService(schm, PWideChar(ANombreServicio), SERVICE_QUERY_STATUS);
+    if (schs > 0) then
+    begin
+      if (QueryServiceStatus(schs, ss)) then
+      begin
+        dwStat := ss.dwCurrentState;
+      end;
+      CloseServiceHandle(schs);
+    end;
+    CloseServiceHandle(schm);
+  end;
+  case dwStat of
+    0 :
+      Result := ESTADO_SERVICIO_NO_DISPONIBLE;
+    1 :
+      Result := ESTADO_SERVICIO_DETENIDO;
+    2 :
+      Result := ESTADO_SERVICIO_INICIANDO;
+    3 :
+      Result := ESTADO_SERVICIO_DETENIENDO;
+    4 :
+      Result := ESTADO_SERVICIO_EN_EJECUCION;
+    7 :
+      Result := ESTADO_SERVICIO_PAUSADO;
+  else
+    Result := inttostr(dwStat);
+  end;
+end;
+
+class function TUtilerias.NombrePCObtener : string;
+var
+  LNombre     : AnsiString;
+  DatosSocket : WSAData;
+begin
+  WSAStartup($0101, DatosSocket);
+  SetLength(LNombre, MAX_PATH);
+  gethostname(PAnsiChar(LNombre), MAX_PATH);
+  SetLength(LNombre, StrLen(PAnsiChar(LNombre)));
+  Result := string(LNombre);
+end;
+
+class procedure TUtilerias.CortaFuegosAbrirPuerto(ANombreEntrada : string; ANumeroPuerto : integer;
+  AProtocoloTCP : boolean; AAmbitoLocal : boolean; AActivar : boolean);
+const
+  NET_FW_PROFILE_DOMAIN     = 0;
+  NET_FW_PROFILE_STANDARD   = 1;
+  NET_FW_IP_VERSION_ANY     = 2;
+  NET_FW_IP_PROTOCOL_UDP    = 17;
+  NET_FW_IP_PROTOCOL_TCP    = 6;
+  NET_FW_SCOPE_ALL          = 0;
+  NET_FW_SCOPE_LOCAL_SUBNET = 1;
+var
+  fwMgr, objPuerto : OleVariant;
+  perfil           : OleVariant;
+begin
+  fwMgr := CreateOLEObject('HNetCfg.FwMgr');
+  perfil := fwMgr.LocalPolicy.CurrentProfile;
+  objPuerto := CreateOLEObject('HNetCfg.FWOpenPort');
+  objPuerto.Name := ANombreEntrada;
+  if AProtocoloTCP then
+    objPuerto.Protocol := NET_FW_IP_PROTOCOL_TCP
+  else
+    objPuerto.Protocol := NET_FW_IP_PROTOCOL_UDP;
+  objPuerto.Port := ANumeroPuerto;
+  if AAmbitoLocal then
+    objPuerto.Scope := NET_FW_SCOPE_LOCAL_SUBNET
+  else
+    objPuerto.Scope := NET_FW_SCOPE_ALL;
+  objPuerto.Enabled := true;
+  perfil.GloballyOpenPorts.Add(objPuerto);
+end;
+
+class function TUtilerias.ServicioIniciar(ANombreServicio : string) : boolean;
+var
+  schm, schs : SC_Handle;
+  ss         : TServiceStatus;
+  psTemp     : PChar;
+  dwChkP     : DWord;
+  LEquipo    : string;
+begin
+  LEquipo := '\\127.0.0.1';
+  ss.dwCurrentState := 1;
+  schm := OpenSCManager(PChar(LEquipo), SERVICES_ACTIVE_DATABASE, SC_MANAGER_CONNECT);
+
+  if (schm > 0) then
+  begin
+
+    schs := OpenService(schm, PChar(ANombreServicio), SERVICE_START or SERVICE_QUERY_STATUS);
+
+    if (schs > 0) then
+    begin
+      psTemp := nil;
+      if (StartService(schs, 0, psTemp)) then
+        if (QueryServiceStatus(schs, ss)) then
+          while (SERVICE_RUNNING <> ss.dwCurrentState) do
+          begin
+            dwChkP := ss.dwCheckPoint;
+            Sleep(ss.dwWaitHint);
+            if (not QueryServiceStatus(schs, ss)) then
+              Break;
+            if (ss.dwCheckPoint < dwChkP) then
+              Break;
+          end;
+      CloseServiceHandle(schs);
+    end;
+
+    CloseServiceHandle(schm);
+
+  end;
+
+  Result := SERVICE_RUNNING = ss.dwCurrentState;
+end;
+
+class function TUtilerias.ServicioDetener(ANombreServicio : string) : boolean;
+var
+  schm, schs : SC_Handle;
+  ss         : TServiceStatus;
+  dwChkP     : DWord;
+  LEquipo    : string;
+begin
+
+  schm := OpenSCManager(PChar(LEquipo), nil, SC_MANAGER_CONNECT);
+
+  if (schm > 0) then
+  begin
+
+    schs := OpenService(schm, PChar(ANombreServicio), SERVICE_STOP or SERVICE_QUERY_STATUS);
+
+    if (schs > 0) then
+    begin
+      if (ControlService(schs, SERVICE_CONTROL_STOP, ss)) then
+        if (QueryServiceStatus(schs, ss)) then
+          while (SERVICE_STOPPED <> ss.dwCurrentState) do
+          begin
+            dwChkP := ss.dwCheckPoint;
+            Sleep(ss.dwWaitHint);
+            if (not QueryServiceStatus(schs, ss)) then
+              Break;
+            if (ss.dwCheckPoint < dwChkP) then
+              Break;
+          end;
+      CloseServiceHandle(schs);
+    end;
+
+    CloseServiceHandle(schm);
+
+  end;
+
+  Result := SERVICE_STOPPED = ss.dwCurrentState;
+end;
+
+end.
