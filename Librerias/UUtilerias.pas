@@ -3,7 +3,7 @@ Unit UUtilerias;
 Interface
 
 Uses
-  System.SysUtils, Winapi.Windows, System.Classes, WinSvc, WinSock, System.Win.ComObj;
+  System.SysUtils, System.AnsiStrings, Winapi.Windows, System.Classes, WinSvc, WinSock, System.Win.ComObj;
 
 Const
 
@@ -412,7 +412,7 @@ Begin
   WSAStartup($0101, DatosSocket);
   SetLength(LNombre, MAX_PATH);
   gethostname(PAnsiChar(LNombre), MAX_PATH);
-  SetLength(LNombre, StrLen(PAnsiChar(LNombre)));
+  SetLength(LNombre, System.AnsiStrings.StrLen(PAnsiChar(LNombre)));
   Result := String(LNombre);
 End;
 
