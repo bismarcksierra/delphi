@@ -1,3 +1,8 @@
+//-----------------------------------------------------------------------------
+//                           Delphi Runtime Library
+//                 Copyright(c) 2021 Bismarck Sierra Ibarra
+//                       bismarcksierra@gmail.com
+//-----------------------------------------------------------------------------
 unit UBitacora;
 
 interface
